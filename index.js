@@ -1,8 +1,7 @@
+//console.log(log);
 
-
-
-window.addEventListener('load', async () => {
-
+(async () => {
+    console.log(log.length);
     // global-util
     const pixelRatio = window.devicePixelRatio;
 
@@ -47,36 +46,36 @@ window.addEventListener('load', async () => {
     const times = [0, 0];
     times[0] = performance.now();
 
-    console.log('--- GET START ---');
+    // console.log('--- GET START ---');
 
 
-    let log = '';
-    try {
+    // let log = '';
+    // try {
 
-        log = await new Promise((r, e) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", "/target.log", true);
-            xhr.onload = () => {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        r(xhr.responseText);
-                    } else {
-                        e(xhr.statusText);
-                    }
-                }
-            };
-            xhr.onerror = e;
-            xhr.send(null);
-        });
+    //     log = await new Promise((r, e) => {
+    //         const xhr = new XMLHttpRequest();
+    //         xhr.open("GET", "/target.log", true);
+    //         xhr.onload = () => {
+    //             if (xhr.readyState === 4) {
+    //                 if (xhr.status === 200) {
+    //                     r(xhr.responseText);
+    //                 } else {
+    //                     e(xhr.statusText);
+    //                 }
+    //             }
+    //         };
+    //         xhr.onerror = e;
+    //         xhr.send(null);
+    //     });
 
-        // console.log(log);
+    //     // console.log(log);
 
-    }
-    catch (e) {
-        console.log(e);
-    }
+    // }
+    // catch (e) {
+    //     console.log(e);
+    // }
 
-    console.log('--- PARSE START ---');
+    // console.log('--- PARSE START ---');
 
     /**
      * キーは空白を含まない
@@ -84,6 +83,7 @@ window.addEventListener('load', async () => {
      * キーと値が=で結ばれた形式でない限り無視される
      * patternの正規表現で指定されている
      */
+    console.log(log)
     const logArray = (() => {
         // 行毎に分割
         const logLines = log.split('\n');
@@ -253,4 +253,4 @@ window.addEventListener('load', async () => {
     };
     animate();
 
-});
+})();
