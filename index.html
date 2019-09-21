@@ -20,29 +20,10 @@
 <body>
     <input type="file" id="file" name="file"/>
     <canvas id="screen"></canvas>
-    <script>
-    function FileSelect(e) {
-        let file = e.target.files[0]; // FileList object
-        console.log(file);
-        let reader = new FileReader();
-        file_content = reader.readAsText(file);
-        //ファイルの中身を取得後に処理を行う
-        reader.addEventListener( 'load', function() {
-            //ファイルの中身をtextarea内に表示する
-            console.log(reader.result.length);    
-            log = reader.result;
-            const script = document.createElement("script");
-            script.src = "index.js"; // 読み込みたい外部JSのURL
-            document.body.appendChild(script);
-        })
-    }
-    let log = ""
-    document.getElementById('file').addEventListener('change', FileSelect, false);
-    </script>
+    <script type="module" src="index.js"></script>
     <script src="three.min.js"></script>
     <script src="BufferGeometryUtils.js"></script>
     <script src="OrbitControls.js"></script>
-    <!-- <script type="module" src="index.js"></script> -->
     <!-- <script id="log" type="text/plain" src="target.log"></script> -->
 </body>
 </html>

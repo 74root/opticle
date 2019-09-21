@@ -1,7 +1,23 @@
 //console.log(log);
+function FileSelect(e) {
+    console.log('--- GET START ---')
 
-(async () => {
-    console.log(log.length);
+    let file = e.target.files[0]; // FileList object
+    console.log(file);
+    let reader = new FileReader();
+    reader.readAsText(file);
+    //ファイルの中身を取得後に処理を行う
+    reader.addEventListener( 'load', function() {
+        //ファイルの中身をtextarea内に表示する
+        console.log(reader.result.length);    
+        log = reader.result;
+        Draw_log(log);
+    })
+}
+let log = ""
+document.getElementById('file').addEventListener('change', FileSelect, false);
+
+async function Draw_log(log) {
     // global-util
     const pixelRatio = window.devicePixelRatio;
 
@@ -43,51 +59,23 @@
     controls.dampingFactor = 0.075;
     controls.update();
 
+
+    console.log('--- PARSE START ---');
     const times = [0, 0];
     times[0] = performance.now();
-
-    // console.log('--- GET START ---');
-
-
-    // let log = '';
-    // try {
-
-    //     log = await new Promise((r, e) => {
-    //         const xhr = new XMLHttpRequest();
-    //         xhr.open("GET", "/target.log", true);
-    //         xhr.onload = () => {
-    //             if (xhr.readyState === 4) {
-    //                 if (xhr.status === 200) {
-    //                     r(xhr.responseText);
-    //                 } else {
-    //                     e(xhr.statusText);
-    //                 }
-    //             }
-    //         };
-    //         xhr.onerror = e;
-    //         xhr.send(null);
-    //     });
-
-    //     // console.log(log);
-
-    // }
-    // catch (e) {
-    //     console.log(e);
-    // }
-
-    // console.log('--- PARSE START ---');
-
     /**
      * キーは空白を含まない
      * 値は""で囲めば空白を含む事が出来る
      * キーと値が=で結ばれた形式でない限り無視される
      * patternの正規表現で指定されている
      */
-    console.log(log)
+    //console.log(log)
+    const ID_dict = {}
     const logArray = (() => {
         // 行毎に分割
         const logLines = log.split('\n');
-        const logKeys = new Array(logLines.length);
+        const logKeys = new Array(logLines.length+1);
+        logKeys.unshift({"Children":[]});
         for (let i = 0; i < logLines.length; i++) {
             // 空白行は飛ばす
             if (logLines[i].trim().length === 0) {
@@ -107,33 +95,50 @@
                 if (isUndef[0]) obj[target[1]] = target[3];
             }
             obj[0] = logLines[i];
-            logKeys[i] = obj;
+            obj["Children"] = [];
+            logKeys[i+1] = obj;
+            ID_dict[logKeys[i+1]["psGUID"]] = i+1;
         }
         return logKeys;
     })();
 
     times[1] = performance.now();
+    console.log(ID_dict);
 
     console.log(times[1] - times[0]);
-    console.log(logArray.length);
-
-
+    //console.log(logArray);
+    //logArray[0]["Children"] = [];
+    //parent-child ref
+    let parent_num;
+    for(let i = 0; i < logArray.length; i++) {
+        if (!logArray[i]){
+            continue;
+        }
+        if(logArray[i]["parentGUID"] && ID_dict[logArray[i]["parentGUID"]]){
+            parent_num = ID_dict[logArray[i]["parentGUID"]];
+        }else{
+            parent_num = 0; //parent: root node            
+        }
+        logArray[parent_num]["Children"].push(i);
+        logArray[i]["Parent"] = parent_num;
+    }            
+    console.log(logArray);
     // sort log
 
 
     // contruct tree
-    const tree = {};
-    const edgeScheme = (child, parent) => {
-        return
-        child.parentGUID !== undefined &&
-            parent.psGUID !== undefined &&
-            child.parentGUID === parent.psGUID;
-    };
-    for (let i = 0; i < logArray.length; i++) {
-        for (let j = 0; j < logArray.length; j++) {
-            if (0);
-        }
-    }
+    // const tree = {};
+    // const edgeScheme = (child, parent) => {
+    //     return
+    //     child.parentGUID !== undefined &&
+    //         parent.psGUID !== undefined &&
+    //         child.parentGUID === parent.psGUID;
+    // };
+    // for (let i = 0; i < logArray.length; i++) {
+    //     for (let j = 0; j < logArray.length; j++) {
+    //         if (0);
+    //     }
+    // }
 
 
 
@@ -156,8 +161,6 @@
     const nodeMesh = new THREE.Mesh( nodeGeometry, material );
     scene.add(nodeMesh);
 
-
-
     const edgeGeometry = new THREE.BufferGeometry();
     const evPos = Float32Array.from((function* vpgen2() {
         yield -1000;
@@ -167,11 +170,13 @@
             yield 0; yield 0 - i * 10; yield 0;
         }
     })());
+    //console.log(evPos);
     const evIndices = Float32Array.from((function* vpgen3() {
         for(let i = 0; i < logArray.length; i++){
             yield 0; yield 1 + i;
         }
     })());
+    //console.log(evIndices);
 
     edgeGeometry.addAttribute('position', new THREE.BufferAttribute(evPos, 3));
     edgeGeometry.setIndex(new THREE.Uint16BufferAttribute(evIndices, 1));
@@ -197,7 +202,8 @@
     
     for(let i = 0; i < logArray.length; i++){
 
-        const text = `${logArray[i].subEvt} ${logArray[i].psPath || ''}`
+        //const text = `${logArray[i].subEvt} ${logArray[i].psPath || ''}`
+        const text = i.toString();
         const textShape = font.generateShapes(text, 4);
         const bgAppend = new THREE.ShapeBufferGeometry(textShape , 2 );
         bgAppend.translate(5, -2 - i * 10, 0);
@@ -253,4 +259,4 @@
     };
     animate();
 
-})();
+}
