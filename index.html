@@ -18,12 +18,20 @@
 </head>
 
 <body>
-    <input type="file" id="file" name="file"/>
-    <canvas id="screen"></canvas>
     <script type="module" src="index.js"></script>
     <script src="three.min.js"></script>
     <script src="BufferGeometryUtils.js"></script>
     <script src="OrbitControls.js"></script>
+    <input type="file" id="file" name="file"/>
+    <form>
+        <select id="key">
+            <option value="all">all</option>
+        </select>
+        </form><input type="text" id="text">
+        <p>
+            <input id="btn" type="button" value="extract & Draw Log">
+        </p>
+    <canvas id="screen"></canvas>
     <!-- <script id="log" type="text/plain" src="target.log"></script> -->
 </body>
 </html>

@@ -1,4 +1,53 @@
 //console.log(log);
+function extract(){
+    let key = document.getElementById("key").value;
+    let text = document.getElementById("text").value;
+    console.log(key);
+    console.log(text);
+    //console.log(LogArray);
+    extract_tree(key, text);
+}
+
+function extract_tree(key,text){
+    if(!tmp_logArray){
+        alert("Please Select a log file First!");
+        return;
+    }
+    if(!text){
+        alert("Please input a text");
+        return;
+    }
+    // pull down
+    let new_logArray = [tmp_logArray[0]];
+    let new_ID_dict = {};
+    console.log(new_logArray.length);
+    if(key=="all"){
+        console.log("all");
+        for(let i=0;i<tmp_logArray.length;i++){
+            for(let j=0;j<keys.length;j++){
+                if(tmp_logArray[i] && tmp_logArray[i][keys[j]] && tmp_logArray[i][keys[j]].indexOf(text) != -1){
+                    new_logArray.push(tmp_logArray[i]);
+                    new_ID_dict[tmp_logArray[i]["psGUID"]] = i;
+                }
+            }
+        }
+    }else{
+        for(let i=0;i<tmp_logArray.length;i++){
+            //console.log(logArray[i]);
+            //console.log(logArray[i][key]);
+            //console.log(logArray[i][key].indexOf(text));
+            if(tmp_logArray[i] && tmp_logArray[i][key] && tmp_logArray[i][key].indexOf(text) != -1){
+                new_logArray.push(tmp_logArray[i]);
+                new_ID_dict[tmp_logArray[i]["psGUID"]] = i;
+            }
+            //for(let j = 0;j<keys.length;j++){}
+        }
+    }
+    console.log(new_logArray);
+    console.log(new_ID_dict);
+    Draw_log(new_logArray,new_ID_dict,false);
+} 
+
 function FileSelect(e) {
     console.log('--- GET START ---')
 
@@ -11,13 +60,90 @@ function FileSelect(e) {
         //ファイルの中身をtextarea内に表示する
         console.log(reader.result.length);    
         log = reader.result;
-        Draw_log(log);
+        init(log);
     })
 }
-let log = ""
-document.getElementById('file').addEventListener('change', FileSelect, false);
 
-async function Draw_log(log) {
+let log;
+let tmp_logArray;
+let tmp_ID_dict;
+const keys = ["acTime","arc","cerSN","com","company","copyright","crTime","csid","domain","evt","fileDesc","fileVer","ip","issuer","loc","lv","mac","md5","moTime","os","parentGUID","product","profile","psDomain","psGUID","psUser","sessionID","sha1","sha256","sig","signer","size","sn","subevt","tmid","type","usr","usrDomain","validFrom","validTo"];
+document.getElementById('file').addEventListener('change', FileSelect, false);
+document.getElementById('btn').onclick = extract;
+
+//create pull down
+let key_element = document.getElementById("key");
+let option_element;
+for(let i=0;i<keys.length;i++){
+    option_element = document.createElement("option");
+    option_element.setAttribute("value",keys[i]);
+    option_element.innerText = keys[i];
+    key_element.appendChild(option_element);
+}
+
+function CreateLogArray(log){
+    /**
+     * キーは空白を含まない
+     * 値は""で囲めば空白を含む事が出来る
+     * キーと値が=で結ばれた形式でない限り無視される
+     * patternの正規表現で指定されている
+     */
+    //console.log(log)
+    let ID_dict = {}
+    let logArray = (() => {
+        // 行毎に分割
+        const logLines = log.split('\n');
+        const logKeys = new Array(logLines.length+1);
+        logKeys.unshift({"Children":[]});
+        for (let i = 0; i < logLines.length; i++) {
+            // 空白行は飛ばす
+            if (logLines[i].trim().length === 0) {
+                logKeys.length--;
+                continue;
+            }
+            // 行の文字列からキーと値のセットを抜き出せるだけ抜き出してobjのプロパティに格納
+            const obj = {};
+            let target;
+            const pattern = /([^\s"=]*)=(?:\"([^"]*)\"|([^"=\s]*))/g;
+            while ((target = pattern.exec(logLines[i])) !== null) {
+                // console.log(target);
+                // キーと値がキャプチャ出来ていれば, 記録
+                const isUndef = [target[2] === undefined, target[3] === undefined];
+                if (!isUndef[0] ^ isUndef[1]) continue;
+                obj[target[1]] = target[2];
+                if (isUndef[0]) obj[target[1]] = target[3];
+            }
+            obj[0] = logLines[i];
+            obj["Children"] = [];
+            logKeys[i+1] = obj;
+            ID_dict[logKeys[i+1]["psGUID"]] = i+1;
+        }
+        return logKeys;
+    })();
+    //console.log(ID_dict);
+    //console.log(logArray);
+    return {logArray,ID_dict};
+}
+
+function init(log){
+    console.log('--- PARSE START ---');
+    const times = [0, 0];
+    times[0] = performance.now();
+    //CreateLogArray(log);
+    let {logArray, ID_dict} = CreateLogArray(log);
+    //logArray = tmp_logArray;
+    //ID_dict = tmp_ID_dict;
+    times[1] = performance.now();
+    console.log(times[1] - times[0]);
+    Draw_log(logArray,ID_dict,true);
+}
+
+async function Draw_log(logArray,ID_dict,flag) {
+    if(flag){
+        tmp_logArray = logArray;
+        tmp_ID_dict = ID_dict;
+    }
+
     // global-util
     const pixelRatio = window.devicePixelRatio;
 
@@ -60,53 +186,9 @@ async function Draw_log(log) {
     controls.update();
 
 
-    console.log('--- PARSE START ---');
-    const times = [0, 0];
-    times[0] = performance.now();
-    /**
-     * キーは空白を含まない
-     * 値は""で囲めば空白を含む事が出来る
-     * キーと値が=で結ばれた形式でない限り無視される
-     * patternの正規表現で指定されている
-     */
-    //console.log(log)
-    const ID_dict = {}
-    const logArray = (() => {
-        // 行毎に分割
-        const logLines = log.split('\n');
-        const logKeys = new Array(logLines.length+1);
-        logKeys.unshift({"Children":[]});
-        for (let i = 0; i < logLines.length; i++) {
-            // 空白行は飛ばす
-            if (logLines[i].trim().length === 0) {
-                logKeys.length--;
-                continue;
-            }
-            // 行の文字列からキーと値のセットを抜き出せるだけ抜き出してobjのプロパティに格納
-            const obj = {};
-            let target;
-            const pattern = /([^\s"=]*)=(?:\"([^"]*)\"|([^"=\s]*))/g;
-            while ((target = pattern.exec(logLines[i])) !== null) {
-                // console.log(target);
-                // キーと値がキャプチャ出来ていれば, 記録
-                const isUndef = [target[2] === undefined, target[3] === undefined];
-                if (!isUndef[0] ^ isUndef[1]) continue;
-                obj[target[1]] = target[2];
-                if (isUndef[0]) obj[target[1]] = target[3];
-            }
-            obj[0] = logLines[i];
-            obj["Children"] = [];
-            logKeys[i+1] = obj;
-            ID_dict[logKeys[i+1]["psGUID"]] = i+1;
-        }
-        return logKeys;
-    })();
-
-    times[1] = performance.now();
-    console.log(ID_dict);
-
-    console.log(times[1] - times[0]);
+    
     //console.log(logArray);
+    //console.log(ID_dict);
     //logArray[0]["Children"] = [];
     //parent-child ref
     let parent_num;
@@ -119,10 +201,13 @@ async function Draw_log(log) {
         }else{
             parent_num = 0; //parent: root node            
         }
-        logArray[parent_num]["Children"].push(i);
+        if(logArray[parent_num]){
+            logArray[parent_num]["Children"].push(i);
+        }
         logArray[i]["Parent"] = parent_num;
     }            
     console.log(logArray);
+
     // sort log
 
 
