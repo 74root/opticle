@@ -55,7 +55,7 @@ window.addEventListener('load', async () => {
 
         log = await new Promise((r, e) => {
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "/target.log", true);
+            xhr.open("GET", "/log/target.log", true);
             xhr.onload = () => {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
@@ -186,7 +186,7 @@ window.addEventListener('load', async () => {
     const font = await new Promise((r, e) => {
         const fl = new THREE.FontLoader();
         fl.load(
-            './Calling Code_Regular.json',
+            './font/Ricty-Diminished_Regular.json',
             r,
             undefined,
             e
