@@ -71,6 +71,21 @@ const keys = ["acTime","arc","cerSN","com","company","copyright","crTime","csid"
 document.getElementById('file').addEventListener('change', FileSelect, false);
 document.getElementById('btn').onclick = extract;
 
+//search function
+function search(){
+    let word = document.getElementById("searchwd").value;
+    let new_logArray = [tmp_logArray[0]];
+    for(let i=0;i<tmp_logArray.length;i++){
+        for(let j=0;j<keys.length;j++){
+            if(tmp_logArray[i] && tmp_logArray[i][keys[j]] && tmp_logArray[i][keys[j]].indexOf(word) != -1){
+                new_logArray.push(tmp_logArray[i]);
+                new_ID_dict[tmp_logArray[i]["psGUID"]] = i;
+            }
+        }
+    }
+}
+document.getElementById("searchbt").onclick = search;
+
 //create pull down
 let key_element = document.getElementById("key");
 let option_element;
@@ -177,9 +192,9 @@ async function Draw_log(logArray,ID_dict,flag) {
     controls.enableRotate = false;
     controls.screenSpacePanning = true;
     controls.mouseButtons = {
-        LEFT: null,
+        LEFT: THREE.MOUSE.PAN,
         MIDDLE: THREE.MOUSE.DOLLY,
-        RIGHT: THREE.MOUSE.PAN
+        RIGHT: null
     };
     controls.enableDamping = true;
     controls.dampingFactor = 0.075;
