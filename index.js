@@ -2,9 +2,8 @@
 function extract(){
     let key = document.getElementById("key").value;
     let text = document.getElementById("text").value;
-    console.log(key);
-    console.log(text);
-    //console.log(LogArray);
+    //console.log(key);
+    //console.log(text);
     extract_tree(key, text);
 }
 
@@ -20,9 +19,7 @@ function extract_tree(key,text){
     // pull down
     let new_logArray = [tmp_logArray[0]];
     let new_ID_dict = {};
-    console.log(new_logArray.length);
     if(key=="all"){
-        console.log("all");
         for(let i=0;i<tmp_logArray.length;i++){
             for(let j=0;j<keys.length;j++){
                 if(tmp_logArray[i] && tmp_logArray[i][keys[j]] && tmp_logArray[i][keys[j]].indexOf(text) != -1){
@@ -33,9 +30,6 @@ function extract_tree(key,text){
         }
     }else{
         for(let i=0;i<tmp_logArray.length;i++){
-            //console.log(logArray[i]);
-            //console.log(logArray[i][key]);
-            //console.log(logArray[i][key].indexOf(text));
             if(tmp_logArray[i] && tmp_logArray[i][key] && tmp_logArray[i][key].indexOf(text) != -1){
                 new_logArray.push(tmp_logArray[i]);
                 new_ID_dict[tmp_logArray[i]["psGUID"]] = i;
@@ -43,8 +37,6 @@ function extract_tree(key,text){
             //for(let j = 0;j<keys.length;j++){}
         }
     }
-    console.log(new_logArray);
-    console.log(new_ID_dict);
     Draw_log(new_logArray,new_ID_dict,false);
 } 
 
@@ -58,7 +50,6 @@ function FileSelect(e) {
     //ファイルの中身を取得後に処理を行う
     reader.addEventListener( 'load', function() {
         //ファイルの中身をtextarea内に表示する
-        console.log(reader.result.length);    
         log = reader.result;
         init(log);
     })
@@ -155,7 +146,7 @@ function init(log){
 
 async function Draw_log(logArray,ID_dict,flag) {
     if(flag){
-        tmp_logArray = logArray;
+        tmp_logArray = logArray.concat();
         tmp_ID_dict = ID_dict;
     }
 
@@ -245,14 +236,42 @@ async function Draw_log(logArray,ID_dict,flag) {
     // node list
 
 
+    let logArray_keys = Object.keys(logArray);
+    let depth = 0;
+    let width = 0;
+    let child_num = 0;
+    let stack = [logArray[0]];
+    // let dequeue = array => {
+    //     const item = array.pop();
+    //     return item;
+    // }
     const material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF } );
-
     const nodeGeometry = new THREE.BufferGeometry();
+    let text_position_array = []
     const nvPos = Float32Array.from((function* vpgen1() {
-        for(let i = 0; i < logArray.length; i++){
-            yield 0; yield 0 - i * 10; yield 0;
-            yield 2; yield -1 - i * 10; yield 0;
-            yield 2; yield 1 - i * 10; yield 0;
+        while(stack.length > 0){
+            const logElement = stack.pop();
+            text_position_array.push([`${logElement.subEvt} ${logElement.psPath || ''}`,0 + width * 10,0 - depth * 10]);           
+            yield 0 + width * 10; yield 0 - depth * 10; yield 0;
+            yield 2 + width * 10; yield -1 - depth * 10; yield 0;
+            yield 2 + width * 10; yield 1 - depth * 10; yield 0;   
+            // yield 0 - depth * 10; yield 0 + width * 10; yield 0;
+            // yield -1 - depth * 10; yield 2 + width * 10; yield 0;
+            // yield 1 - depth * 10; yield 2 + width * 10; yield 0;   
+            if (logElement.Children.length != 0) {
+                for(let i = logElement.Children.length;i>0;i--){
+                    if(logElement.Children[i]){
+                        stack.push(logArray[logElement.Children[i]]);
+                    }
+                }
+                child_num = logElement.Children.length;
+                depth += 1;
+            } 
+            width += 1;    
+            child_num -= 1;
+            if (child_num == 0){
+                depth -= 1;
+            }
         }
     })());
 
@@ -261,32 +280,52 @@ async function Draw_log(logArray,ID_dict,flag) {
     const nodeMesh = new THREE.Mesh( nodeGeometry, material );
     scene.add(nodeMesh);
 
+    logArray_keys = Object.keys(logArray);
+    depth = 0;
+    width = 0;
+    child_num = 0;
+    stack = [logArray[0]];
     const edgeGeometry = new THREE.BufferGeometry();
     const evPos = Float32Array.from((function* vpgen2() {
-        yield -1000;
-        yield (logArray.length - 1) * -10 / 2;
-        yield 0;
-        for(let i = 0; i < logArray.length; i++){
-            yield 0; yield 0 - i * 10; yield 0;
+        // yield -1000;
+        // yield (logArray.length - 1) * -10 / 2;
+        // yield 0;
+        while(stack.length > 0){
+            const logElement = stack.pop();
+            yield 0 + width * 10; yield 0 - depth * 10; yield 0;
+            yield 2 + width * 10; yield -1 - depth * 10; yield 0;
+            //yield 2 + width * 30; yield 1 - depth * 30; yield 0;
+            //yield 0 - depth * 10; yield 0 + width * 10; yield 0;   
+            if (logElement.Children.length != 0) {
+                for(let i = logElement.Children.length;i>0;i--){
+                    if(logElement.Children[i]){
+                        stack.push(logArray[logElement.Children[i]]);
+                    }
+                }
+                child_num = logElement.Children.length;
+                depth += 1;
+            } 
+            width += 1;    
+            child_num -= 1;
+            if (child_num == 0){
+                depth -= 1;
+            }
         }
     })());
-    //console.log(evPos);
+
     const evIndices = Float32Array.from((function* vpgen3() {
-        for(let i = 0; i < logArray.length; i++){
-            yield 0; yield 1 + i;
+        for(let i = 1; i < logArray.length; i++){
+            if(logArray[i]){
+                yield logArray[i]["Parent"]; yield 1 + i;
+            }
         }
     })());
-    //console.log(evIndices);
 
     edgeGeometry.addAttribute('position', new THREE.BufferAttribute(evPos, 3));
     edgeGeometry.setIndex(new THREE.Uint16BufferAttribute(evIndices, 1));
 
     const edgeMesh = new THREE.LineSegments( edgeGeometry, material );
     scene.add(edgeMesh);
-
-
-
-
 
     const font = await new Promise((r, e) => {
         const fl = new THREE.FontLoader();
@@ -299,14 +338,12 @@ async function Draw_log(logArray,ID_dict,flag) {
     });
 
     let textGeometry = null;
-    
-    for(let i = 0; i < logArray.length; i++){
-
+    for(let i = 0; i < text_position_array.length; i++){
         //const text = `${logArray[i].subEvt} ${logArray[i].psPath || ''}`
-        const text = i.toString();
+        const text = text_position_array[i][0];
         const textShape = font.generateShapes(text, 4);
         const bgAppend = new THREE.ShapeBufferGeometry(textShape , 2 );
-        bgAppend.translate(5, -2 - i * 10, 0);
+        bgAppend.translate(text_position_array[i][1], text_position_array[i][2], 0);
 
         if(textGeometry !== null){
             textGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
