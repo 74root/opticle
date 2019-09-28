@@ -20,7 +20,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     const refiner = new Refiner(rootDom);
     const searcher = new Searcher(rootDom);
 
+    /**
+     * ログが読み込まれた時の処理を記述した関数
+     * @param {string|null} logString ログの文字列 失敗しているとnull
+     */
     const logInit = async (logString) => {
+
+        if(logString == null) return;
 
         // パース処理とツリー構築
         const tree = new Tree(logString);
