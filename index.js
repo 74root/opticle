@@ -17,7 +17,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     // ツリーと無関係な初期化の実行
     const tonelico = new Tonelico(canvas);
     const viewController = new ViewController(canvas, tonelico);
-    const refiner = new Refiner(rootDom);
+    const refiner = new Refiner(document.getElementById('btn'));
     const searcher = new Searcher(rootDom);
 
     /**
