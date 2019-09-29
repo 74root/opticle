@@ -1,4 +1,5 @@
 import { Tree } from './lib/Tree.js';
+import { ParentFinder } from "./lib/ParentFinder.js";
 import { Tonelico } from './lib/Tonelico.js';
 import { Refiner } from './lib/Refiner.js';
 import { Searcher } from './lib/Searcher.js';
@@ -29,7 +30,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         if(logString == null) return;
 
         // パース処理とツリー構築
-        const tree = new Tree(logString);
+        const tree = new Tree(logString, ParentFinder);
         // await tree.initFinish;
 
         // ツリーの描画準備, 絞り込み準備, 検索準備
