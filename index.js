@@ -21,6 +21,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     const refiner = new Refiner(document.getElementById('btn'));
     const searcher = new Searcher(rootDom);
 
+    const fontPromise = new Promise((r, e) => {
+        const fl = new THREE.FontLoader();
+        fl.load('../font/Ricty-Diminished_Regular.json', r, undefined, e);
+    });
+
     /**
      * ログが読み込まれた時の処理を記述した関数
      * @param {string|null} logString ログの文字列 失敗しているとnull
@@ -30,7 +35,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         if(logString == null) return;
 
         // パース処理とツリー構築
-        const tree = new Tree(logString, ParentFinder);
+        const tree = new Tree(logString, ParentFinder, await fontPromise);
         // await tree.initFinish;
 
         // ツリーの描画準備, 絞り込み準備, 検索準備
