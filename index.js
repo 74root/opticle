@@ -23,7 +23,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const fontPromise = new Promise((r, e) => {
         const fl = new THREE.FontLoader();
-        fl.load('../font/Ricty-Diminished_Regular.json', r, undefined, e);
+        fl.load('./font/Ricty-Diminished_Regular.json', r, undefined, e);
     });
 
     /**
