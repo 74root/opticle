@@ -58,7 +58,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         /**
          * 内部でツリーの情報が更新されていた場合に反映を行う
          */
-        tonelico.update();
+        tonelico.update(t);
 
         tonelico.render();
     };
